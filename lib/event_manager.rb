@@ -31,12 +31,17 @@ lines = CSV.open(
 
 template_letter = File.read('form_letter.erb')
 erb_letter = ERB.new template_letter
+Dir.mkdir('Personal letters') unless Dir.exists?('Personal letters')
+
 
 lines.each_with_index do |row| 
+    id = row[0]
     name = row[:first_name]
     zip = clean_zipcode(row[:zipcode])
     representative_names = repres_by_zipcode(zip)
     personal_letter = erb_letter.result(binding)
+    output = File.open("Personal letters/#{id} letter.html",'w')
 
-    puts personal_letter
+    output.puts personal_letter
+    output.close
 end
