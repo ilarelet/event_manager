@@ -23,15 +23,23 @@ def repres_by_zipcode(zip)
     end 
 end
 
+def create_letter(id, letter)    
+    Dir.mkdir('Personal letters') unless Dir.exists?('Personal letters')
+    output = File.open("Personal letters/#{id} letter.html",'w')
+    output.puts letter
+    output.close
+end
+
 lines = CSV.open(
     'event_attendees.csv',
     headers: true,
     header_converters: :symbol
 )
 
+
+
 template_letter = File.read('form_letter.erb')
 erb_letter = ERB.new template_letter
-Dir.mkdir('Personal letters') unless Dir.exists?('Personal letters')
 
 
 lines.each_with_index do |row| 
@@ -40,8 +48,5 @@ lines.each_with_index do |row|
     zip = clean_zipcode(row[:zipcode])
     representative_names = repres_by_zipcode(zip)
     personal_letter = erb_letter.result(binding)
-    output = File.open("Personal letters/#{id} letter.html",'w')
-
-    output.puts personal_letter
-    output.close
+    create_letter(id, personal_letter)
 end
