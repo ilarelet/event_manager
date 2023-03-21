@@ -8,6 +8,15 @@ def clean_zipcode(zip)
     zip.to_s.rjust(5, "0")[0..4]
 end
 
+def clean_phone(phone)
+    phone.to_s.gsub!(/[-(). ]/, "")
+    if phone.length == 10 or (phone.length == 11 and phone[0] == "1")
+        phone.rjust(11, "1")
+    else
+        "-"
+    end
+end
+
 def repres_by_zipcode(zip)
     civic_info = Google::Apis::CivicinfoV2::CivicInfoService.new
     civic_info.key = 'AIzaSyClRzDqDh5MsXwnCWi0kOiiBivP6JsSyBw'
@@ -45,8 +54,10 @@ erb_letter = ERB.new template_letter
 lines.each_with_index do |row| 
     id = row[0]
     name = row[:first_name]
+    phone = clean_phone(row[:homephone])
     zip = clean_zipcode(row[:zipcode])
     representative_names = repres_by_zipcode(zip)
     personal_letter = erb_letter.result(binding)
     create_letter(id, personal_letter)
+    puts phone
 end
