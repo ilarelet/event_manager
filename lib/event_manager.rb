@@ -29,10 +29,14 @@ lines = CSV.open(
     header_converters: :symbol
 )
 
+form_letter = File.read('form_letter.html')
+
 lines.each_with_index do |row| 
     name = row[:first_name]
     zip = clean_zipcode(row[:zipcode])
     representative_names = repres_by_zipcode(zip)
+    personal_letter = form_letter.gsub('FIRST_NAME', name)
+    personal_letter.gsub!('LEGISLATORS',     representative_names)
 
-    puts "#{name}, #{zip}: #{representative_names}"
+    puts personal_letter
 end
