@@ -3,6 +3,8 @@ puts 'Event manager initialized!'
 require 'csv'
 require 'google/apis/civicinfo_v2'
 require 'erb'
+require 'time'
+require 'date'
 
 def clean_zipcode(zip)
     zip.to_s.rjust(5, "0")[0..4]
@@ -49,7 +51,10 @@ lines = CSV.open(
 
 template_letter = File.read('form_letter.erb')
 erb_letter = ERB.new template_letter
-
+hours = Hash.new(0)
+weekdays = Hash.new(0)
+max_hour_count = 0
+max_wday_count = 0
 
 lines.each_with_index do |row| 
     id = row[0]
@@ -58,6 +63,32 @@ lines.each_with_index do |row|
     zip = clean_zipcode(row[:zipcode])
     representative_names = repres_by_zipcode(zip)
     personal_letter = erb_letter.result(binding)
+    #Output into the file
     create_letter(id, personal_letter)
-    puts phone
+
+    #Parsing the date and time of the registration
+    reg_date = Time.strptime(row[:regdate], "%m/%d/%Y %k:%M")
+    #Determining the most common hour to register
+    hours[reg_date.hour] += 1
+    max_hour_count = hours[reg_date.hour] if hours[reg_date.hour] > max_hour_count
+    #Determining the most common weekday to register 
+    weekdays[reg_date.wday] += 1
+    max_wday_count = weekdays[reg_date.wday] if weekdays[reg_date.wday] > max_wday_count 
 end
+most_common_hours = hours.filter { |hour, count| count == max_hour_count}.keys
+most_common_weekdays = weekdays.filter { |wday, count| count == max_wday_count}.keys
+#converting the weekday numbers to the weekday names
+most_common_weekdays.map! {|wday_num| Date::DAYNAMES[wday_num]}
+
+puts "Most popular hour#{
+    if most_common_hours.length == 1
+        ' is'
+    else
+        's are'
+    end}: #{most_common_hours.join(', ')}"
+puts "Most popular weekday#{
+    if most_common_weekdays.length == 1
+        ' is'
+    else
+        's are'
+    end}: #{most_common_weekdays.join(', ')}"
